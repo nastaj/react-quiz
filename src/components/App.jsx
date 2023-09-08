@@ -11,6 +11,7 @@ import Progress from "./Progress";
 import FinishScreen from "./FinishScreen";
 import Footer from "./Footer";
 import Timer from "./Timer";
+import PrevButton from "./PrevButton";
 
 const SECS_PER_QUESTION = 30;
 
@@ -20,7 +21,7 @@ const initialState = {
   // 'loading', 'error', 'ready', 'active', 'finished'
   status: "loading",
   index: 0,
-  answer: null,
+  answers: [],
   points: 0,
   highscore: 0,
   secondsRemaining: null,
@@ -52,6 +53,7 @@ function reducer(state, action) {
       return {
         ...state,
         currentQuestionSet: action.payload,
+        answers: Array.from({ length: action.payload.length }, () => null),
       };
     }
     case "start": {
@@ -63,10 +65,13 @@ function reducer(state, action) {
     }
     case "newAnswer": {
       const question = state.currentQuestionSet.at(state.index);
+      const newAnswer = state.answers.map((answer, i) => {
+        return i === state.index ? action.payload : answer;
+      });
 
       return {
         ...state,
-        answer: action.payload,
+        answers: newAnswer,
         points:
           action.payload === question.correctOption
             ? state.points + question.points
@@ -74,7 +79,23 @@ function reducer(state, action) {
       };
     }
     case "nextQuestion": {
-      return { ...state, index: state.index + 1, answer: null };
+      return {
+        ...state,
+        index: state.index + 1,
+        // answer: state.status === "history" ? state.answer : null,
+      };
+    }
+    case "checkAnswers": {
+      return {
+        ...state,
+        status: "history",
+      };
+    }
+    case "prevQuestion": {
+      return {
+        ...state,
+        index: state.index - 1,
+      };
     }
     case "finish": {
       return {
@@ -112,7 +133,7 @@ export default function App() {
       questions,
       status,
       index,
-      answer,
+      answers,
       points,
       highscore,
       secondsRemaining,
@@ -132,7 +153,7 @@ export default function App() {
     fetch("http://127.0.0.1:8000/questions")
       .then((res) => res.json())
       .then((data) => dispatch({ type: "dataReceived", payload: data }))
-      .catch((err) => dispatch({ type: "dataFailed" }));
+      .catch((err) => dispatch({ type: "dataFailed", payload: err }));
   }, []);
 
   useEffect(
@@ -171,25 +192,34 @@ export default function App() {
             difficulty={difficulty}
           />
         )}
-        {status === "active" && (
+        {(status === "active" || status === "history") && (
           <>
             <Progress
               index={index}
               numQuestions={numQuestions}
               points={points}
               maxPossiblePoints={maxPossiblePoints}
-              answer={answer}
+              answers={answers}
             />
             <Question
               question={currentQuestionSet[index]}
               dispatch={dispatch}
-              answer={answer}
+              answers={answers}
+              index={index}
             />
             <Footer>
-              <Timer dispatch={dispatch} secondsRemaining={secondsRemaining} />
+              {status !== "history" && (
+                <Timer
+                  dispatch={dispatch}
+                  secondsRemaining={secondsRemaining}
+                />
+              )}
+              {status === "history" && (
+                <PrevButton dispatch={dispatch} index={index} />
+              )}
               <NextButton
                 dispatch={dispatch}
-                answer={answer}
+                answers={answers}
                 index={index}
                 numQuestions={numQuestions}
               />

@@ -269,6 +269,18 @@ progress {
   background-color: transparent;
 }
 
-.margin-right-medium {
-  margin-right: 1.6rem;
+.footer,
+.finish-footer {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
+.btn-prev {
+  justify-self: start;
+  grid-column: 1 / 2;
+}
+
+.btn-next {
+  grid-column: 2 / -1;
+  justify-self: end;
 }

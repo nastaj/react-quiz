@@ -15,12 +15,20 @@ function FinishScreen({ points, maxPossiblePoints, highscore, dispatch }) {
         {maxPossiblePoints} ({Math.ceil(percentage)}%)
       </p>
       <p className="highscore">(Highscore: {highscore} points)</p>
-      <button
-        className="btn btn-ui"
-        onClick={() => dispatch({ type: "restart" })}
-      >
-        Restart Quiz
-      </button>
+      <div className="finish-footer">
+        <button
+          className="btn btn-prev"
+          onClick={() => dispatch({ type: "checkAnswers" })}
+        >
+          Check answers
+        </button>
+        <button
+          className="btn btn-next"
+          onClick={() => dispatch({ type: "restart" })}
+        >
+          Restart Quiz
+        </button>
+      </div>
     </>
   );
 }
