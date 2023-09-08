@@ -257,3 +257,18 @@ progress {
   font-size: inherit;
   padding: 0.8rem;
 }
+
+/* EXTRA */
+.difficulty-btns {
+  margin-bottom: 3.2rem;
+  display: flex;
+  gap: 1.4rem;
+}
+
+.difficulty-active {
+  background-color: transparent;
+}
+
+.margin-right-medium {
+  margin-right: 1.6rem;
+}

@@ -16,7 +16,7 @@ const SECS_PER_QUESTION = 30;
 
 const initialState = {
   questions: [],
-
+  currentQuestionSet: [],
   // 'loading', 'error', 'ready', 'active', 'finished'
   status: "loading",
   index: 0,
@@ -24,12 +24,17 @@ const initialState = {
   points: 0,
   highscore: 0,
   secondsRemaining: null,
+  difficulty: "medium",
 };
 
 function reducer(state, action) {
   switch (action.type) {
     case "dataReceived": {
-      return { ...state, questions: action.payload, status: "ready" };
+      return {
+        ...state,
+        questions: action.payload,
+        status: "ready",
+      };
     }
     case "dataFailed": {
       return {
@@ -37,15 +42,27 @@ function reducer(state, action) {
         status: "error",
       };
     }
+    case "setDifficulty": {
+      return {
+        ...state,
+        difficulty: action.payload,
+      };
+    }
+    case "setCurrentQuestions": {
+      return {
+        ...state,
+        currentQuestionSet: action.payload,
+      };
+    }
     case "start": {
       return {
         ...state,
         status: "active",
-        secondsRemaining: state.questions.length * SECS_PER_QUESTION,
+        secondsRemaining: state.currentQuestionSet.length * SECS_PER_QUESTION,
       };
     }
     case "newAnswer": {
-      const question = state.questions.at(state.index);
+      const question = state.currentQuestionSet.at(state.index);
 
       return {
         ...state,
@@ -72,6 +89,7 @@ function reducer(state, action) {
         ...initialState,
         status: "ready",
         questions: state.questions,
+        currentQuestionSet: state.currentQuestionSet,
         highscore: state.highscore,
       };
     }
@@ -90,12 +108,22 @@ function reducer(state, action) {
 
 export default function App() {
   const [
-    { questions, status, index, answer, points, highscore, secondsRemaining },
+    {
+      questions,
+      status,
+      index,
+      answer,
+      points,
+      highscore,
+      secondsRemaining,
+      currentQuestionSet,
+      difficulty,
+    },
     dispatch,
   ] = useReducer(reducer, initialState);
 
-  const numQuestions = questions.length;
-  const maxPossiblePoints = questions.reduce(
+  const numQuestions = currentQuestionSet.length;
+  const maxPossiblePoints = currentQuestionSet.reduce(
     (prev, cur) => prev + cur.points,
     0
   );
@@ -107,6 +135,28 @@ export default function App() {
       .catch((err) => dispatch({ type: "dataFailed" }));
   }, []);
 
+  useEffect(
+    function () {
+      const questionsEasy = questions.filter(
+        (question) => question.points === 10
+      );
+      const questionsMedium = questions.filter(
+        (question) => question.points === 20
+      );
+      const questionsHard = questions.filter(
+        (question) => question.points === 30
+      );
+
+      difficulty === "easy" &&
+        dispatch({ type: "setCurrentQuestions", payload: questionsEasy });
+      difficulty === "medium" &&
+        dispatch({ type: "setCurrentQuestions", payload: questionsMedium });
+      difficulty === "hard" &&
+        dispatch({ type: "setCurrentQuestions", payload: questionsHard });
+    },
+    [questions, difficulty]
+  );
+
   return (
     <div className="app">
       <Header />
@@ -115,7 +165,11 @@ export default function App() {
         {status === "loading" && <Loader />}
         {status === "error" && <Error />}
         {status === "ready" && (
-          <StartScreen numQuestions={numQuestions} dispatch={dispatch} />
+          <StartScreen
+            numQuestions={numQuestions}
+            dispatch={dispatch}
+            difficulty={difficulty}
+          />
         )}
         {status === "active" && (
           <>
@@ -127,7 +181,7 @@ export default function App() {
               answer={answer}
             />
             <Question
-              question={questions[index]}
+              question={currentQuestionSet[index]}
               dispatch={dispatch}
               answer={answer}
             />
