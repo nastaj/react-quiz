@@ -23,7 +23,7 @@ const initialState = {
   index: 0,
   answers: [],
   points: 0,
-  highscore: 0,
+  highscore: JSON.parse(localStorage.getItem("highscore")) || null,
   secondsRemaining: null,
   difficulty: "medium",
 };
@@ -112,6 +112,10 @@ function reducer(state, action) {
         questions: state.questions,
         currentQuestionSet: state.currentQuestionSet,
         highscore: state.highscore,
+        answers: Array.from(
+          { length: state.currentQuestionSet.length },
+          () => null
+        ),
       };
     }
     case "tick": {
@@ -150,9 +154,11 @@ export default function App() {
   );
 
   useEffect(function () {
-    fetch("http://127.0.0.1:8000/questions")
+    fetch("questions.json")
       .then((res) => res.json())
-      .then((data) => dispatch({ type: "dataReceived", payload: data }))
+      .then((data) =>
+        dispatch({ type: "dataReceived", payload: data.questions })
+      )
       .catch((err) => dispatch({ type: "dataFailed", payload: err }));
   }, []);
 
@@ -176,6 +182,13 @@ export default function App() {
         dispatch({ type: "setCurrentQuestions", payload: questionsHard });
     },
     [questions, difficulty]
+  );
+
+  useEffect(
+    function () {
+      localStorage.setItem("highscore", JSON.stringify(highscore));
+    },
+    [highscore]
   );
 
   return (
