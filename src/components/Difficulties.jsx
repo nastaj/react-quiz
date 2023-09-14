@@ -1,4 +1,8 @@
-function Difficulties({ dispatch, difficulty }) {
+import { useQuiz } from "../contexts/QuizContext";
+
+function Difficulties() {
+  const { difficulty, dispatch } = useQuiz();
+
   return (
     <div className="difficulty-btns">
       <button
